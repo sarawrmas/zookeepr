@@ -10,8 +10,10 @@ const { animals } = require('./data/animals');
 function filterByQuery(query, animalsArray) {
     // Set personality traits array to an empty array
     let personalityTraitsArray = [];
+
     // Save the animalsArray as filteredResults
     let filteredResults = animalsArray;
+
     // Save personalityTraits as a dedicated array
     if (query.personalityTraits) {
         // If personalityTraits is a string, place it into a new array and save
@@ -26,14 +28,17 @@ function filterByQuery(query, animalsArray) {
             filteredResults = filteredResults.filter(animal => animal.personalityTraits.indexOf(trait) !== -1);
         });
     }
+
     // User searches by diet
     if (query.diet) {
         filteredResults = filteredResults.filter(animal => animal.diet === query.diet);
     }
+
     // User searches by species
     if (query.species) {
         filteredResults = filteredResults.filter(animal => animal.species === query.species)
     }
+    
     // User searches by name
     if (query.name) {
         filteredResults = filteredResults.filter(animal => animal.name === query.name)
@@ -41,6 +46,12 @@ function filterByQuery(query, animalsArray) {
 
     // function returns results of search
     return filteredResults;
+};
+
+// searches for one animal by taking in the id and array of animals and returning a single animal object
+function findById(id, animalsArray) {
+    const result = animalsArray.filter(animal => animal.id === id)[0];
+    return result;
 }
 
 // creates route that the front-end can request data from using get() method with two arguments:
@@ -52,8 +63,19 @@ app.get('/api/animals', (req, res) => {
         results = filterByQuery(req.query, results);
     }
     res.json(results);
-})
+});
+
+//  returns one specific animal rather than an array of animals that match the query
+app.get('/api/animals/:id', (req, res) => {
+    const result = findById(req.params.id, animals);
+    if (result) {
+        res.json(result);
+    } else {
+        res.send(404);
+    }
+});
+
 // make server listen for requests
 app.listen(PORT, () => {
     console.log(`API server now on port ${PORT}!`)
-})
+});
