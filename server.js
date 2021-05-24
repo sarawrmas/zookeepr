@@ -1,4 +1,6 @@
 const express = require('express');
+// tell our app to use an environment variable
+const PORT = process.env.PORT || 3001;
 // instantiate the server to start Express.js, assigning express() to the app variable
 const app = express();
 // require data to connect front-end to back-end
@@ -36,7 +38,7 @@ function filterByQuery(query, animalsArray) {
     if (query.name) {
         filteredResults = filteredResults.filter(animal => animal.name === query.name)
     }
-    
+
     // function returns results of search
     return filteredResults;
 }
@@ -52,6 +54,6 @@ app.get('/api/animals', (req, res) => {
     res.json(results);
 })
 // make server listen for requests
-app.listen(3001, () => {
-    console.log(`API server now on port 3001!`)
+app.listen(PORT, () => {
+    console.log(`API server now on port ${PORT}!`)
 })
