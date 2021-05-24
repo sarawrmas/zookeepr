@@ -1,8 +1,14 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 // tell our app to use an environment variable
 const PORT = process.env.PORT || 3001;
 // instantiate the server to start Express.js, assigning express() to the app variable
 const app = express();
+// parse incoming string or array data
+app.use(express.urlencoded({ extended: true }));
+// parse incoming JSON data
+app.use(express.json());
 // require data to connect front-end to back-end
 const { animals } = require('./data/animals');
 
@@ -38,7 +44,7 @@ function filterByQuery(query, animalsArray) {
     if (query.species) {
         filteredResults = filteredResults.filter(animal => animal.species === query.species)
     }
-    
+
     // User searches by name
     if (query.name) {
         filteredResults = filteredResults.filter(animal => animal.name === query.name)
@@ -52,6 +58,39 @@ function filterByQuery(query, animalsArray) {
 function findById(id, animalsArray) {
     const result = animalsArray.filter(animal => animal.id === id)[0];
     return result;
+}
+
+// accepts the POST route's req.body value and the array we want to add data to, adding a new animal to the catalog
+function createNewAnimal(body, animalsArray) {
+    const animal = body;
+    // save new animal to animal data
+    animalsArray.push(animal);
+    // write synchronous file
+    fs.writeFileSync(
+        // write animals.json file to join the directory of the file we execute the code in with the path to the json file
+        path.join(__dirname, './data/animals.json'),
+        // save array data as JSON (json.stringify), don't edit any exisiting data (null), and create space between values to make more readable (2)
+        JSON.stringify({ animals: animalsArray }, null, 2)
+    );
+    // return finished code to post route for response
+    return animal;
+}
+
+// make sure user input is submitted correctly and not missing any criteria
+function validateAnimal(animal) {
+    if (!animal.name || typeof animal.name !== 'string') {
+        return false;
+    }
+    if (!animal.species || typeof animal.species !== 'string') {
+        return false;
+    }
+    if (!animal.diet || typeof animal.diet !== 'string') {
+        return false;
+    }
+    if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
+        return false;
+    }
+    return true;
 }
 
 // creates route that the front-end can request data from using get() method with two arguments:
@@ -72,6 +111,21 @@ app.get('/api/animals/:id', (req, res) => {
         res.json(result);
     } else {
         res.send(404);
+    }
+});
+
+// Accepts data to be used or stored server-side
+app.post('/api/animals', (req, res) => {
+    // set id based on what the next index of the array will be
+    req.body.id = animals.length.toString();
+    // if any data in req.body is incorrect, send 400 error back
+    if (!validateAnimal(req.body)) {
+        res.status(400).send('The animal is not properly formatted.');
+    } else {
+        // add animal to json file and animals array
+        const animal = createNewAnimal(req.body, animals);
+        // send data back to the client
+        res.json(animal);
     }
 });
 
