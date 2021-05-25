@@ -11,6 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // require data to connect front-end to back-end
 const { animals } = require('./data/animals');
+// instructs the server to make front-end files readily available and not gate it behind a server endpoint
+app.use(express.static('public'));
 
 // takes in req.query as an argument and filters through the animals accordingly, returning the new filtered array
 function filterByQuery(query, animalsArray) {
@@ -127,6 +129,21 @@ app.post('/api/animals', (req, res) => {
         // send data back to the client
         res.json(animal);
     }
+});
+
+// connect html to back-end
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'));
+});
+app.get('/animals', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/animals.html'));
+});
+app.get('/zookeepers', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/zookeepers.html'));
+});
+// use wildcard route so that if a user tries to navigate anywhere besides given routes, they are rerouted to homepage
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
 // make server listen for requests
